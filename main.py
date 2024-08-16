@@ -1,94 +1,60 @@
 import math
 import numpy as np
 
-choose_option = int(input('''select the option for the calculation: 
+def get_input_coordinates():
+    coordinates = []
+    for i in range(3):
+        coordinates.append(float(input(f"Insert coordinate {i + 1}: ")))
+    return coordinates
+
+def get_rotation_matrix(axis, degrees):
+    radians = math.radians(degrees)
+    cosine = math.cos(radians)
+    sine = math.sin(radians)
+
+    if axis == 'x':
+        return np.array([[1, 0, 0], [0, cosine, sine], [0, -sine, cosine]])
+    elif axis == 'y':
+        return np.array([[cosine, 0, -sine], [0, 1, 0], [sine, 0, cosine]])
+    elif axis == 'z':
+        return np.array([[cosine, sine, 0], [-sine, cosine, 0], [0, 0, 1]])
+
+def rotate_coordinates(coordinates, rotation_matrix):
+    return np.dot(rotation_matrix, np.array(coordinates).reshape(3, 1))
+
+def main():
+    choose_option = int(input('''Select the option for the calculation: 
                             [1] - Calculation of inertial coordinates
                             [2] - Calculation of moving coordinates
                             Choose: '''))
 
-coordinates_input = []
+    if choose_option not in [1, 2]:
+        print("Invalid option selected.")
+        return
 
-if choose_option == 1 or choose_option == 2:
-    for i in range(1,4):
-        coordinates = float(input("Insert the coordinates: "))
-        coordinates_input.append(coordinates)
-
+    coordinates_input = get_input_coordinates()
     raw_degrees_of_rotation = float(input("Insert the degrees: "))
-    degrees_of_rotation = math.radians(raw_degrees_of_rotation)
 
-    cosine_degrees = math.cos(degrees_of_rotation)
-    sine_degrees = math.sin(degrees_of_rotation)
+    axis_rotation = ''
+    if coordinates_input[0] == 0:
+        axis_rotation = 'x'
+    elif coordinates_input[1] == 0:
+        axis_rotation = 'y'
+    elif coordinates_input[2] == 0:
+        axis_rotation = 'z'
+    else:
+        print("At least one coordinate must be zero to define an axis of rotation.")
+        return
 
-
-    matrix_rotation_x = np.array([[cosine_degrees,sine_degrees],[-sine_degrees,cosine_degrees]])
-    matrix_rotation_y = np.array([[cosine_degrees,-sine_degrees],[sine_degrees,cosine_degrees]])
-    matrix_rotation_z = np.array([[cosine_degrees,sine_degrees],[-sine_degrees,cosine_degrees]])
+    rotation_matrix = get_rotation_matrix(axis_rotation, raw_degrees_of_rotation)
 
     if choose_option == 1:
-        if coordinates_input[0] == 0:
-            print("Rotação no eixo X")
-
-            coordinates_matrix = np.array([[coordinates_input[1]],[coordinates_input[2]]])
-
-            moving_coordinates_matrix = np.array([[coordinates_input[1]],coordinates_input[2]])
-            inverse_matrix_rotation_x = np.linalg.inv(matrix_rotation_x)
-            
-            result_matrix = np.dot(inverse_matrix_rotation_x,moving_coordinates_matrix)
-            print(f" X = {result_matrix[0][0]:.6f} \n Y = {result_matrix[1][0]:.6f}")
-
-
-        elif coordinates_input[1] == 0:
-            print("Rotação no eixo Y")
-
-            coordinates_matrix = np.array([[coordinates_input[0]],[coordinates_input[2]]])
-
-            moving_coordinates_matrix = np.array([[coordinates_input[0]],coordinates_input[2]])
-            inverse_matrix_rotation_y = np.linalg.inv(matrix_rotation_y)
-
-            result_matrix = np.dot(inverse_matrix_rotation_y,moving_coordinates_matrix)
-            print(f" X = {result_matrix[0][0]:.6f} \n Y = {result_matrix[1][0]:.6f}")
-
-
-        elif coordinates_input[2] == 0:
-            print("Rotação no eixo Z")
-
-            coordinates_matrix = np.array([[coordinates_input[0]],[coordinates_input[1]]])
-
-            moving_coordinates_matrix = np.array([[coordinates_input[0]],[coordinates_input[1]]])
-            inverse_matrix_rotation_z = np.linalg.inv(matrix_rotation_z)
-         
-            result_matrix = np.dot(inverse_matrix_rotation_z,moving_coordinates_matrix)
-            print(f" X = {result_matrix[0][0]:.6f} \n Y = {result_matrix[1][0]:.6f}")
-
-    elif choose_option == 2:
-
-        if coordinates_input[0] == 0:
-            print("Rotação no eixo X")
-
-            coordinates_matrix = np.array([[coordinates_input[1]],[coordinates_input[2]]])
-
-            moving_coordinates_matrix = np.array([[coordinates_input[1]],coordinates_input[2]])
-            
-            result_matrix = np.dot(matrix_rotation_x,moving_coordinates_matrix)
-            print(f" X = {result_matrix[0][0]:.6f} \n Y = {result_matrix[1][0]:.6f}")
-
-
-        elif coordinates_input[1] == 0:
-            print("Rotação no eixo Y")
-
-            coordinates_matrix = np.array([[coordinates_input[0]],[coordinates_input[2]]])
-
-            result_matrix = np.dot(matrix_rotation_y,coordinates_matrix)
-            print(f" X = {result_matrix[0][0]:.6f} \n Y = {result_matrix[1][0]:.6f}")
-
-
-        elif coordinates_input[2] == 0:
-            print("Rotação no eixo Z")
-
-            coordinates_matrix = np.array([[coordinates_input[0]],[coordinates_input[1]]])
-        
-            result_matrix = np.dot(matrix_rotation_z,coordinates_matrix)
-            print(f" X = {result_matrix[0][0]:.6f} \n Y = {result_matrix[1][0]:.6f}")
-
+        inverse_rotation_matrix = np.linalg.inv(rotation_matrix)
+        result_matrix = rotate_coordinates(coordinates_input, inverse_rotation_matrix)
+        print(f"Resulting inertial coordinates:\n X = {result_matrix[0][0]:.6f} \n Y = {result_matrix[1][0]:.6f} \n Z = {result_matrix[2][0]:.6f}")
     else:
-        print("Choose an valid calculation run")
+        result_matrix = rotate_coordinates(coordinates_input, rotation_matrix)
+        print(f"Resulting moving coordinates:\n X = {result_matrix[0][0]:.6f} \n Y = {result_matrix[1][0]:.6f} \n Z = {result_matrix[2][0]:.6f}")
+
+if __name__ == "__main__":
+    main()
